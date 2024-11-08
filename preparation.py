@@ -2,4 +2,4 @@
 
 def dummy():
     """ placeholder for functions """
-    pass
+    return(1)
