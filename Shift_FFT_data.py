@@ -1,12 +1,7 @@
-""" dummy preparations file """
+""" This Module contain function to shuft FFT data """
 
 import numpy as np
 import pandas as pd
-
-def dummy():
-    """ dummy functions for template file"""
-    return 0
-
 
 def shift_fft(df):
     """
@@ -20,11 +15,11 @@ def shift_fft(df):
     """
     # Convert the DataFrame to a numpy array
     fft_data = df.values
-    
+
     # Perform the shift using np.fft.fftshift to center the zero frequency components
     shifted_fft_data = np.fft.fftshift(fft_data)
-    
+
     # Convert the shifted data back to a DataFrame with the same index and column headers
     shifted_df = pd.DataFrame(shifted_fft_data, index=df.index, columns=df.columns)
-    
+
     return shifted_df
