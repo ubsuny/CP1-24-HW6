@@ -6,7 +6,7 @@ import pandas as pd
 from preparation import resize_to_fft_size
 
 def test_resize_to_fft_size():
-    # Create a random 2D pandas DataFrame to simulate an image
+    # Creates a random 2D pandas DataFrame to simulate an image
     image = np.random.rand(500, 300)
     image_df = pd.DataFrame(image)
 
