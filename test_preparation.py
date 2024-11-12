@@ -1,3 +1,4 @@
+""" This module runs the unit test for shift FFT data """
 import unittest
 import numpy as np
 import pandas as pd
@@ -24,7 +25,7 @@ def shift_fft(image_df):
 
     # Convert to pandas DataFrame for consistency with input
     shifted_fft_df = pd.DataFrame(shifted_fft, index=image_df.index, columns=image_df.columns)
-    
+
     return shifted_fft_df
 
 
