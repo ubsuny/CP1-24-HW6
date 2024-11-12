@@ -1,16 +1,11 @@
 
 """ This module runs the unit test for shift FFT data """
 import unittest
-import numpy as np
-import pandas as pd
-
-""" This is to test the functions created in the preparation module """
-
-import numpy as np
-import pandas as pd
 import pytest
-
 import preparation as prep
+import numpy as np
+import pandas as pd
+
 
 def test_dummy():
     """ Unit test for dummy function """
