@@ -2,9 +2,8 @@
 import unittest
 import numpy as np
 import pandas as pd
-import preparation as prep  # Assuming you have a module called 'preparation'
+import preparation as prep
 
-# Dummy test function (assuming you have a function 'dummy' in 'preparation' module)
 def test_dummy():
     """ Unit test for dummy function """
     assert prep.dummy() == 0
@@ -30,7 +29,15 @@ def shift_fft(image_df):
 
 
 class TestFFTShift(unittest.TestCase):
-
+    """
+    Unit test case for the shift_fft function, which applies a 2D FFT to an image
+    and shifts the zero frequency component to the center.
+    
+    This class tests:
+    - The shape of the output is the same as the input.
+    - The output is a pandas DataFrame.
+    - The center of the FFT result contains a non-zero value after the shift.
+    """
     def setUp(self):
         """
         Set up a simple 2D image to test the FFT shift function.
