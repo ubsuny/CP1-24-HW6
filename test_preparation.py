@@ -1,6 +1,5 @@
 """ unit test template """
 
-import pytest
 import numpy as np
 import pandas as pd
 from preparation import resize_to_fft_size
