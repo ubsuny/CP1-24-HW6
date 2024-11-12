@@ -1,4 +1,4 @@
-""" unit test template """
+""" unit test """
 
 import numpy as np
 import pandas as pd
