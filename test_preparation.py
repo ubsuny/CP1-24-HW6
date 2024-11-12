@@ -74,11 +74,8 @@ class TestFFTShift(unittest.TestCase):
 
         # Check the center element of the shifted FFT (should be non-zero)
         center_index = len(self.image_df) // 2
-        self.assertNotEqual(
-        center_value, 
-        0, 
-        "Center frequency should not be zero."
-    )
+        self.assertNotEqual(shifted_fft[center_index, center_index], 0, 
+                            "Center frequency should not be zero.")
 
 if __name__ == '__main__':
     unittest.main(argv=[''], exit=False)
