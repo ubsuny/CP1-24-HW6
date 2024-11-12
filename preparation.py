@@ -1,12 +1,11 @@
 """ dummy preparations file """
 import numpy as np
 import pandas as pd
-from PIL import Image
 
 def dummy():
     """ dummy functions for template file"""
     return 0
-    
+
 def shift_fft(df):
     """
     Shift the 2D FFT data in the DataFrame so that the zero-frequency component is centered.
