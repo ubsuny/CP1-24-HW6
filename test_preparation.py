@@ -85,8 +85,8 @@ class TestFFTShift(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main(argv=[''], exit=False)
 
-@pytest.fixture
-def sq_img():
+@pytest.fixture(name='sq_img')
+def setup_sq_img():
     """ Fixture that returns a 2D square-shaped structure of data
         in pandas DataFrame format (e.g., 256x256) with default indexing. """
     # Define size
@@ -96,8 +96,8 @@ def sq_img():
     # Convert to DataFrame
     return pd.DataFrame(data)
 
-@pytest.fixture
-def rect_img():
+@pytest.fixture(name='rect_img')
+def setup_rect_img():
     """ Fixture that returns a 2D rectangular-shaped structure of data
         in pandas DataFrame format (e.g., 512x256) with default indexing. """
     # Define size
