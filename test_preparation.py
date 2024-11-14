@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import preparation as prep
 
+
 def test_dummy():
     """ Unit test for dummy function """
     assert prep.dummy() == 0
@@ -44,7 +45,7 @@ def test_averager():
     while i<5:
         y.append(x)
         i+=1
-    assert pk.averager(y)==2.5
+    assert prep.averager(y)==2.5
 
 def test_erase():
     """
@@ -55,8 +56,8 @@ def test_erase():
     y=[]
     for i in range(5):
         y.append(x)
-    ave=pk.averager(y)
-    z=pk.erase(2.5,y)
+    ave=prep.averager(y)
+    z=prep.erase(2.5,y)
     for i in z:
         for j in i:
             assert j<=ave
