@@ -1,4 +1,3 @@
-
 """ This is to test the functions created in the preparation module """
 
 import os
@@ -257,3 +256,61 @@ def test_load_pickle_data_with_nonexistent_file(capsys):
 
     # Ensure that the error message is printed
     assert "Error loading data: The file '{pickle_file_path}' was not found." in captured.out
+
+# New tests for windowing/unwindowing functions
+import numpy as np
+from preparation import apply_2d_windowing, remove_2d_windowing
+
+@pytest.fixture
+def sample_data():
+    """
+    Fixture that provides a sample 2D numpy array of random values for testing
+    the windowing and unwindowing functions.
+
+    Returns:
+        np.ndarray: A 2D numpy array with shape (100, 100) and random values.
+    """
+    return np.random.rand(100, 100)
+
+@pytest.mark.parametrize("window_type", ["hann", "hamming", "gaussian"])
+def test_apply_2d_windowing_multiple_windows(sample_data, window_type):
+    """
+    Test the apply_2d_windowing function with multiple window types to ensure it
+    correctly applies the window to the data.
+
+    Parameters:
+        sample_data (np.ndarray): Fixture providing a sample 2D numpy array.
+        window_type (str): The type of window to apply ("hann", "hamming", or "gaussian").
+
+    Asserts:
+        - The shape of the windowed data matches the input data shape.
+        - The shape of the generated window matches the input data shape.
+    """
+    windowed_data, window = apply_2d_windowing(sample_data, window_type)
+    assert windowed_data.shape == sample_data.shape, "Windowed data shape mismatch."
+    assert window.shape == sample_data.shape, "Window shape mismatch."
+
+def test_remove_2d_windowing(sample_data):
+    """
+    Test the remove_2d_windowing function to ensure it correctly reverts windowed data
+    back to its original form within a reasonable tolerance.
+
+    Parameters:
+        sample_data (np.ndarray): Fixture providing a sample 2D numpy array.
+
+    Asserts:
+        - The unwindowed data matches the original data within a specified tolerance in the central region.
+    """
+    # Apply windowing to the sample data
+    windowed_data, window = apply_2d_windowing(sample_data)
+    
+    # Remove windowing from the windowed data
+    unwindowed_data = remove_2d_windowing(windowed_data, window)
+    
+    # Define central region for comparison (excluding edge effects)
+    center = slice(sample_data.shape[0] // 4, 3 * sample_data.shape[0] // 4)
+    central_original = sample_data[center, center]
+    central_unwindowed = unwindowed_data[center, center]
+    
+    # Verify that the unwindowed data's central region is close to the original data within tolerance
+    assert np.allclose(central_original, central_unwindowed, atol=1e-2), "Central region of unwindowed data does not match original data."

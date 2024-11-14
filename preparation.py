@@ -124,3 +124,41 @@ def load_pickle_data(pickle_file_path: str, structure_size: tuple = None):
     except ImportError as e:
         print(f"Error loading data: {e}")
         return pd.DataFrame()  # Return empty DataFrame on failure
+
+def apply_2d_windowing(data, window_type="hann"):
+    """
+    Applies a 2D windowing function to the input data based on the specified window type.
+
+    Parameters:
+    - data (np.ndarray): The input 2D data array (e.g., image).
+    - window_type (str): Type of window to apply (e.g., "hann", "hamming", "gaussian").
+
+    Returns:
+    - windowed_data (np.ndarray): The windowed 2D data array.
+    - window (np.ndarray): The 2D window used, to reapply for unwindowing.
+    """
+    assert data.ndim == 2, "Input data must be a 2D array."
+
+    # Generate 1D window and create the 2D window by outer product
+    window_1d = np.hanning(data.shape[0]) if window_type == "hann" else np.hamming(data.shape[0])
+    window_2d = np.outer(window_1d, window_1d)
+
+    # Apply the window to the data
+    windowed_data = data * window_2d
+    return windowed_data, window_2d
+
+def remove_2d_windowing(windowed_data, window):
+    """
+    Removes the applied 2D windowing function from the data.
+
+    Parameters:
+    - windowed_data (np.ndarray): The windowed 2D data array.
+    - window (np.ndarray): The window that was used.
+
+    Returns:
+    - original_data (np.ndarray): Data with the window removed.
+    """
+    # Add a small constant to avoid division by zero
+    epsilon = 1e-10
+    original_data = windowed_data / (window + epsilon)
+    return original_data
