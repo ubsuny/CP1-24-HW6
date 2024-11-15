@@ -271,7 +271,6 @@ def sample_data():
         np.ndarray: A 2D numpy array with shape (100, 100) and random values.
     """
     return np.random.rand(100, 100)
-
 @pytest.mark.parametrize("window_type", ["hann", "hamming", "gaussian"])
 def test_apply_2d_windowing_multiple_windows(sample_data, window_type):
     """
@@ -294,23 +293,18 @@ def test_remove_2d_windowing(sample_data):
     """
     Test the remove_2d_windowing function to ensure it correctly reverts windowed data
     back to its original form within a reasonable tolerance.
-
     Parameters:
         sample_data (np.ndarray): Fixture providing a sample 2D numpy array.
-
     Asserts:
         - The unwindowed data matches the original data within a specified tolerance in the central region.
     """
     # Apply windowing to the sample data
     windowed_data, window = apply_2d_windowing(sample_data)
-    
     # Remove windowing from the windowed data
     unwindowed_data = remove_2d_windowing(windowed_data, window)
-    
     # Define central region for comparison (excluding edge effects)
     center = slice(sample_data.shape[0] // 4, 3 * sample_data.shape[0] // 4)
     central_original = sample_data[center, center]
     central_unwindowed = unwindowed_data[center, center]
-    
     # Verify that the unwindowed data's central region is close to the original data within tolerance
     assert np.allclose(central_original, central_unwindowed, atol=1e-2), "Central region of unwindowed data does not match original data."
