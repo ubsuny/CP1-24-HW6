@@ -1,4 +1,3 @@
-
 """ This is to test the functions created in the preparation module """
 
 import os
