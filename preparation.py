@@ -168,7 +168,7 @@ def erase(ave,grid):
     for count,j in row:
         new_grid.append([])
         for k in j:
-            if np.abs(k)>ave:  
+            if np.abs(k)>ave:
                 k=0
             new_grid[count].append(k)
     return new_grid
