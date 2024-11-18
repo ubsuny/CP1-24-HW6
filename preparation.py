@@ -209,4 +209,3 @@ def erase(ave,grid):
                 k=0
             new_grid[count].append(k)
     return new_grid
-
