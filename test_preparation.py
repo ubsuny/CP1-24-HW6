@@ -1,34 +1,36 @@
-"""
-This module contains unit tests and fixtures for testing the preparation module.
-It includes functions for testing FFT transformations, windowing, and loading data.
-"""
+""" This is to test the functions created in the preparation module """
 
 import os
 import pickle
 import unittest
-
 import pytest
 import numpy as np
 import pandas as pd
-
 import preparation as prep
 from preparation import apply_2d_windowing, remove_2d_windowing
 
 
 def test_dummy():
-    """Unit test for dummy function"""
+    """ Unit test for dummy function """
     assert prep.dummy() == 0
 
-
+# Assuming 'shift_fft' is your function that does the FFT shift
 def shift_fft(image_df):
     """
     Takes the 2D-FFT of an image represented by a pandas DataFrame and shifts the result
     so that the zero frequency component is in the center of the image.
     """
     image_array = image_df.to_numpy()
+
+    # Perform the 2D FFT
     fft_result = np.fft.fft2(image_array)
+
+    # Shift the zero frequency component to the center
     shifted_fft = np.fft.fftshift(fft_result)
+
+    # Convert to pandas DataFrame for consistency with input
     shifted_fft_df = pd.DataFrame(shifted_fft, index=image_df.index, columns=image_df.columns)
+
     return shifted_fft_df
 
 
@@ -36,12 +38,17 @@ class TestFFTShift(unittest.TestCase):
     """
     Unit test case for the shift_fft function, which applies a 2D FFT to an image
     and shifts the zero frequency component to the center.
+    
+    This class tests:
+    - The shape of the output is the same as the input.
+    - The output is a pandas DataFrame.
+    - The center of the FFT result contains a non-zero value after the shift.
     """
-
     def setUp(self):
         """
         Set up a simple 2D image to test the FFT shift function.
         """
+        # Create a small 2D image with a known simple pattern (e.g., a 4x4 grid)
         self.image_df = pd.DataFrame([
             [0, 1, 0, 1],
             [1, 0, 1, 0],
@@ -66,102 +73,245 @@ class TestFFTShift(unittest.TestCase):
     def test_fft_shift_center(self):
         """
         Test that the zero frequency component is shifted to the center.
+        For a very simple pattern, we check that the center is non-zero.
         """
         shifted_fft_df = shift_fft(self.image_df)
         shifted_fft = shifted_fft_df.to_numpy()
+
+        # Check the center element of the shifted FFT (should be non-zero)
         center_index = len(self.image_df) // 2
-        self.assertNotEqual(shifted_fft[center_index, center_index], 0)
+        self.assertNotEqual(shifted_fft[center_index, center_index], 0,
+                            "Center frequency should not be zero.")
 
+if __name__ == '__main__':
+    unittest.main(argv=[''], exit=False)
 
-@pytest.fixture(name="square_image")
-def setup_square_image():
-    """Fixture that returns a 2D square-shaped structure of data."""
+@pytest.fixture(name='sq_img')
+def setup_sq_img():
+    """ Fixture that returns a 2D square-shaped structure of data
+        in pandas DataFrame format (e.g., 256x256) with default indexing. """
+    # Define size
     pix = 256
-    data = np.random.randint(256, size=(pix, pix), dtype=np.uint8)
+    # Generate random pixel intensities for the simulated image (grayscale representation)
+    data = np.random.randint(256, size = (pix, pix), dtype = np.uint8)
+    # Convert to DataFrame
     return pd.DataFrame(data)
 
-
-@pytest.fixture(name="rectangular_image")
-def setup_rectangular_image():
-    """Fixture that returns a 2D rectangular-shaped structure of data."""
-    pix_x, pix_y = 512, 256
-    data = np.random.randint(256, size=(pix_x, pix_y), dtype=np.uint8)
+@pytest.fixture(name='rect_img')
+def setup_rect_img():
+    """ Fixture that returns a 2D rectangular-shaped structure of data
+        in pandas DataFrame format (e.g., 512x256) with default indexing. """
+    # Define size
+    pix_x = 512
+    pix_y = 256
+    # Generate random pixel intensities for the simulated image (grayscale representation)
+    data = np.random.randint(256, size = (pix_x, pix_y), dtype = np.uint8)
+    # Convert to DataFrame
     return pd.DataFrame(data)
 
+def test_twod_fft_mag(sq_img):
+    """this test makes sure that the twod_fft_mag functions properly, by testing this also makes
+    sure that the length and widths of these two data sets are the same with the same assert"""
+    img = sq_img
+    compare = np.isclose(prep.twod_fft_mag(img),np.fft.fft2(np.array(img)), atol=1e-8)
+    assert np.all(compare)
 
-@pytest.fixture(name="image_data_fixture")
-def image_data_fixture():
-    """Fixture providing a sample 2D numpy array."""
-    return np.random.rand(100, 100)
+def test_twod_inv_fft(sq_img):
+    """this compares the inves of the fft function agenced the original unlaltered
+    2d matrix this also makes sure that the length and widths of these two data
+    sets are the same with the same assert"""
+    img = sq_img
+    compare1 = np.isclose(np.real( prep.twod_inv_fft( prep.twod_fft_mag( img ))),
+                          np.array(img), atol=1e-7)
+    assert np.all(compare1)
+
+def test_twod_calc_freq(sq_img):
+    """This test just makes sure that what the function outputs is indeed the correct size"""
+    img = sq_img
+    array1, array2 = prep.twod_calc_freq(img,1,1)
+    image = np.array(img)
+    width, height = image.shape
+    assert len(array1) == width
+    assert len(array2) == height
 
 
-@pytest.mark.parametrize("window_type", ["hann", "hamming", "gaussian"])
-def test_apply_2d_windowing_multiple_windows(image_data_fixture, window_type):
-    """
-    Test the apply_2d_windowing function with multiple window types.
-    """
-    windowed_data, window = apply_2d_windowing(image_data_fixture, window_type)
-    assert windowed_data.shape == image_data_fixture.shape
-    assert window.shape == image_data_fixture.shape
-
-
-def test_remove_2d_windowing(image_data_fixture):
-    """
-    Test the remove_2d_windowing function to ensure it correctly reverts windowed data.
-    """
-    windowed_data, window = apply_2d_windowing(image_data_fixture)
-    unwindowed_data = remove_2d_windowing(windowed_data, window)
-    center = slice(image_data_fixture.shape[0] // 4, 3 * image_data_fixture.shape[0] // 4)
-    central_original = image_data_fixture[center, center]
-    central_unwindowed = unwindowed_data[center, center]
-    assert np.allclose(central_original, central_unwindowed, atol=1e-2)
-
+# Path to the test pickle file
+PICKLE_PATH = "images/test_img_data.pkl"
 
 @pytest.fixture(name="sample_pickle_fixture")
 def setup_sample_pickle():
     """
     Fixture to set up and tear down a sample pickle file for testing.
+    Creates a 2x2 DataFrame, saves it to the specified file path, and removes it after the test.
     """
-    pickle_path = "images/test_img_data.pkl"
-    os.makedirs("images", exist_ok=True)
+    os.makedirs("images", exist_ok=True)  # Ensure the directory exists
     sample_data = pd.DataFrame([[1, 2], [3, 4]])
-    with open(pickle_path, 'wb') as file:
+    with open(PICKLE_PATH, 'wb') as file:
         pickle.dump(sample_data, file)
     yield sample_data
-    os.remove(pickle_path)
+    os.remove(PICKLE_PATH)
 
+@pytest.fixture(name="custom_structure_fixture")
+def setup_custom_structure_fixture():
+    """ Fixture for custom data with a specific structure size """
+    data = {'A': [1, 2], 'B': [3, 4], 'C': [5, 6]}  # 2 rows and 3 columns
+    df = pd.DataFrame(data)
+    # Adjust index and columns based on the structure size (2x3)
+    df.index = [0, 1]  # Integer index for 2 rows
+    df.columns = [0, 1, 2]  # Integer columns for 3 columns
+    with open(PICKLE_PATH, 'wb') as file:
+        pickle.dump(df, file)
+    yield df
+    os.remove(PICKLE_PATH)
 
 @pytest.fixture(name="empty_pickle_fixture")
 def setup_empty_pickle():
     """
-    Fixture to set up an empty pickle file for testing.
+    Fixture to set up and tear down an empty DataFrame pickle file for testing.
+    Creates an empty DataFrame, saves it to the specified file path, and removes it after the test.
     """
-    pickle_path = "images/test_img_data.pkl"
-    os.makedirs(os.path.dirname(pickle_path), exist_ok=True)
     empty_data = pd.DataFrame()
-    with open(pickle_path, 'wb') as file:
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(PICKLE_PATH), exist_ok=True)
+
+    # Save the empty DataFrame to a pickle file
+    with open(PICKLE_PATH, 'wb') as file:
         pickle.dump(empty_data, file)
-    yield pickle_path
-    if os.path.isfile(pickle_path):
-        os.remove(pickle_path)
 
+    yield PICKLE_PATH  # Yield the file path for loading in tests
 
-def test_load_pickle_data_with_sample_data(sample_pickle_fixture):
+    # After the test, remove the pickle file
+    if os.path.isfile(PICKLE_PATH):
+        os.remove(PICKLE_PATH)
+
+def test_load_pickle_data_with_sample_data(sample_pickle_fixture, capsys):
     """
-    Tests load_pickle_data with the sample data to ensure it matches the expected structure.
+    Tests load_pickle_data with the sample data to ensure it matches the expected 2x2 structure.
     """
-    pickle_path = "images/test_img_data.pkl"
-    df_default = prep.load_pickle_data(pickle_path)
+    df_default = prep.load_pickle_data(PICKLE_PATH)
+
+    # Capture printed output
+    captured = capsys.readouterr()
+
+    # Ensure that the DataFrame matches the sample data
     pd.testing.assert_frame_equal(df_default, sample_pickle_fixture)
 
+    # Ensure the index and columns match the original size and format
+    assert df_default.index.tolist() == sample_pickle_fixture.index.tolist()
+    assert df_default.columns.tolist() == sample_pickle_fixture.columns.tolist()
 
-def test_load_pickle_data_with_empty_data(empty_pickle_fixture):
+    # Check printed output for errors or warnings
+    assert "Warning: The loaded DataFrame is empty." not in captured.out
+    assert "Error: The file 'images/non_existent_file.pkl' was not found." not in captured.out
+
+def test_load_pickle_data_with_custom_structure(custom_structure_fixture, capsys):
     """
-    Test loading an empty pickle file to ensure it returns an empty DataFrame.
+    Test loading a pickle file with a custom structure size (2x3).
     """
+    # Load data using the function with a custom structure (2x3)
+    df_default = prep.load_pickle_data(PICKLE_PATH, structure_size=(2, 3))
+
+    # Capture printed output
+    captured = capsys.readouterr()
+
+    # Ensure the loaded DataFrame matches the custom structure fixture (2x3)
+    pd.testing.assert_frame_equal(df_default, custom_structure_fixture)
+
+    # Ensure the index and columns match the expected format
+    assert df_default.index.tolist() == custom_structure_fixture.index.tolist()
+    assert df_default.columns.tolist() == custom_structure_fixture.columns.tolist()
+
+    # Check for warnings or errors in captured output
+    assert "Warning: The loaded DataFrame is empty." not in captured.out
+    assert "Error: The file 'images/non_existent_file.pkl' was not found." not in captured.out
+
+def test_load_pickle_data_with_empty_data(empty_pickle_fixture, capsys):
+    """
+    Test loading an empty pickle file to ensure it returns an empty DataFrame
+    and prints the appropriate warning.
+    """
+    # Load the empty data pickle file
     df_empty = prep.load_pickle_data(empty_pickle_fixture)
+
+    # Capture printed output
+    captured = capsys.readouterr()
+
+    # Check if the returned DataFrame is empty
     assert df_empty.empty
 
+    # Ensure that the warning message is printed
+    assert "Error loading data: The loaded DataFrame is empty." in captured.out
 
-if __name__ == '__main__':
-    unittest.main(argv=[''], exit=False)
+def test_load_pickle_data_with_nonexistent_file(capsys):
+    """
+    Test loading a non-existent pickle file to ensure it prints the correct error message.
+    """
+    pickle_file_path = 'nonexsiting/file/path/invalid_file.pkl'
+    # Try to load the non-existent file
+    df_non_existent = prep.load_pickle_data(pickle_file_path)
+
+    # Capture printed output
+    captured = capsys.readouterr()
+
+    # Check if the returned DataFrame is empty
+    assert df_non_existent.empty
+
+    # Ensure that the error message is printed
+    assert "Error loading data: The file '{pickle_file_path}' was not found." in captured.out
+
+# New tests for windowing/unwindowing functions
+
+@pytest.fixture
+def sample_data():
+    """
+    Fixture that provides a sample 2D numpy array of random values for testing
+    the windowing and unwindowing functions.
+
+    Returns:
+        np.ndarray: A 2D numpy array with shape (100, 100) and random values.
+    """
+    return np.random.rand(100, 100)
+@pytest.mark.parametrize("window_type", ["hann", "hamming", "gaussian"])
+def test_apply_2d_windowing_multiple_windows(sample_data, window_type):
+    """
+    Test the apply_2d_windowing function with multiple window types to ensure it
+    correctly applies the window to the data.
+
+    Parameters:
+        sample_data (np.ndarray): Fixture providing a sample 2D numpy array.
+        window_type (str): The type of window to apply ("hann", "hamming", or "gaussian").
+
+    Asserts:
+        - The shape of the windowed data matches the input data shape.
+        - The shape of the generated window matches the input data shape.
+    """
+    windowed_data, window = apply_2d_windowing(sample_data, window_type)
+    assert windowed_data.shape == sample_data.shape, "Windowed data shape mismatch."
+    assert window.shape == sample_data.shape, "Window shape mismatch."
+
+def test_remove_2d_windowing(sample_data):
+    """
+    Test the remove_2d_windowing function to ensure it correctly reverts windowed data
+    back to its original form within a reasonable tolerance.
+    Parameters:
+        sample_data (np.ndarray): Fixture providing a sample 2D numpy array.
+    Asserts:
+        - The unwindowed data matches the original data within a specified tolerance.
+    """
+    # Apply windowing to the sample data
+    windowed_data, window = apply_2d_windowing(sample_data)
+    # Remove windowing from the windowed data
+    unwindowed_data = remove_2d_windowing(windowed_data, window)
+    # Define central region for comparison (excluding edge effects)
+    center = slice(sample_data.shape[0] // 4, 3 * sample_data.shape[0] // 4)
+    central_original = sample_data[center, center]
+    central_unwindowed = unwindowed_data[center, center]
+    # Verify that the unwindowed data's central region is
+    # close to the original data within tolerance
+    assert np.allclose(
+    central_original,
+    central_unwindowed,
+    atol=1e-2
+), (
+    "Central region of unwindowed data does not match original data."
+)
