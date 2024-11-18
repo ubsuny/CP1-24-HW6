@@ -124,3 +124,51 @@ def load_pickle_data(pickle_file_path: str, structure_size: tuple = None):
     except ImportError as e:
         print(f"Error loading data: {e}")
         return pd.DataFrame()  # Return empty DataFrame on failure
+
+def averager(grid):
+    """
+    averager takes in a two dimensional list of numbers and 
+    determines the average absolute value within the 2D list.
+    It then returns this average value
+    """
+    ave=0
+    count=0
+    for j in grid:
+        ave2=0
+        count2=0
+        for k in j:
+            ave2+=np.abs(k)
+            count2+=1
+        ave+=ave2/(count2)
+        count+=1
+    ave=ave/(count)
+
+    return ave
+
+def periodic_erase(data):
+    """
+    periodic erase finds the peaks of the fourier transform
+    by assuming that every value above double the average indicates
+    periodic behavior. These values above double the average
+    are reduced to zero.
+    """
+    value=data.values
+    ave=averager(value)
+    new_data=erase(ave*2, value)
+    return pd.DataFrame(new_data)
+
+def erase(ave,grid):
+    """
+    erase takes in a number and a 2D list and
+    reduces all values above or equal to ave
+    to zero and returns the 2D list.
+    """
+    new_grid=[]
+    row=enumerate(grid)
+    for count,j in row:
+        new_grid.append([])
+        for k in j:
+            if np.abs(k)>ave:
+                k=0
+            new_grid[count].append(k)
+    return new_grid
