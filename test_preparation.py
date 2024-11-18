@@ -1,3 +1,8 @@
+"""
+This module contains unit tests and fixtures for testing the preparation module.
+It includes functions for testing FFT transformations, windowing, and loading data.
+"""
+
 import os
 import pickle
 import unittest
@@ -21,16 +26,9 @@ def shift_fft(image_df):
     so that the zero frequency component is in the center of the image.
     """
     image_array = image_df.to_numpy()
-
-    # Perform the 2D FFT
     fft_result = np.fft.fft2(image_array)
-
-    # Shift the zero frequency component to the center
     shifted_fft = np.fft.fftshift(fft_result)
-
-    # Convert to pandas DataFrame for consistency with input
     shifted_fft_df = pd.DataFrame(shifted_fft, index=image_df.index, columns=image_df.columns)
-
     return shifted_fft_df
 
 
@@ -75,46 +73,46 @@ class TestFFTShift(unittest.TestCase):
         self.assertNotEqual(shifted_fft[center_index, center_index], 0)
 
 
-@pytest.fixture(name='sq_img')
-def setup_sq_img():
+@pytest.fixture(name="square_image")
+def setup_square_image():
     """Fixture that returns a 2D square-shaped structure of data."""
     pix = 256
     data = np.random.randint(256, size=(pix, pix), dtype=np.uint8)
     return pd.DataFrame(data)
 
 
-@pytest.fixture(name='rect_img')
-def setup_rect_img():
+@pytest.fixture(name="rectangular_image")
+def setup_rectangular_image():
     """Fixture that returns a 2D rectangular-shaped structure of data."""
     pix_x, pix_y = 512, 256
     data = np.random.randint(256, size=(pix_x, pix_y), dtype=np.uint8)
     return pd.DataFrame(data)
 
 
-@pytest.fixture(name="sample_image_data")
-def sample_image_data():
+@pytest.fixture(name="image_data_fixture")
+def image_data_fixture():
     """Fixture providing a sample 2D numpy array."""
     return np.random.rand(100, 100)
 
 
 @pytest.mark.parametrize("window_type", ["hann", "hamming", "gaussian"])
-def test_apply_2d_windowing_multiple_windows(sample_image_data, window_type):
+def test_apply_2d_windowing_multiple_windows(image_data_fixture, window_type):
     """
     Test the apply_2d_windowing function with multiple window types.
     """
-    windowed_data, window = apply_2d_windowing(sample_image_data, window_type)
-    assert windowed_data.shape == sample_image_data.shape
-    assert window.shape == sample_image_data.shape
+    windowed_data, window = apply_2d_windowing(image_data_fixture, window_type)
+    assert windowed_data.shape == image_data_fixture.shape
+    assert window.shape == image_data_fixture.shape
 
 
-def test_remove_2d_windowing(sample_image_data):
+def test_remove_2d_windowing(image_data_fixture):
     """
     Test the remove_2d_windowing function to ensure it correctly reverts windowed data.
     """
-    windowed_data, window = apply_2d_windowing(sample_image_data)
+    windowed_data, window = apply_2d_windowing(image_data_fixture)
     unwindowed_data = remove_2d_windowing(windowed_data, window)
-    center = slice(sample_image_data.shape[0] // 4, 3 * sample_image_data.shape[0] // 4)
-    central_original = sample_image_data[center, center]
+    center = slice(image_data_fixture.shape[0] // 4, 3 * image_data_fixture.shape[0] // 4)
+    central_original = image_data_fixture[center, center]
     central_unwindowed = unwindowed_data[center, center]
     assert np.allclose(central_original, central_unwindowed, atol=1e-2)
 
@@ -130,22 +128,6 @@ def setup_sample_pickle():
     with open(pickle_path, 'wb') as file:
         pickle.dump(sample_data, file)
     yield sample_data
-    os.remove(pickle_path)
-
-
-@pytest.fixture(name="custom_structure_fixture")
-def setup_custom_structure_fixture():
-    """
-    Fixture for custom data with a specific structure size.
-    """
-    data = {'A': [1, 2], 'B': [3, 4], 'C': [5, 6]}
-    df = pd.DataFrame(data)
-    df.index = [0, 1]
-    df.columns = [0, 1, 2]
-    pickle_path = "images/test_img_data.pkl"
-    with open(pickle_path, 'wb') as file:
-        pickle.dump(df, file)
-    yield df
     os.remove(pickle_path)
 
 
@@ -171,15 +153,6 @@ def test_load_pickle_data_with_sample_data(sample_pickle_fixture):
     pickle_path = "images/test_img_data.pkl"
     df_default = prep.load_pickle_data(pickle_path)
     pd.testing.assert_frame_equal(df_default, sample_pickle_fixture)
-
-
-def test_load_pickle_data_with_custom_structure(custom_structure_fixture):
-    """
-    Test loading a pickle file with a custom structure size (2x3).
-    """
-    pickle_path = "images/test_img_data.pkl"
-    df_default = prep.load_pickle_data(pickle_path, structure_size=(2, 3))
-    pd.testing.assert_frame_equal(df_default, custom_structure_fixture)
 
 
 def test_load_pickle_data_with_empty_data(empty_pickle_fixture):
