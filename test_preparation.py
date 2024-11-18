@@ -261,8 +261,8 @@ def test_load_pickle_data_with_nonexistent_file(capsys):
 
 # New tests for windowing/unwindowing functions
 
-@pytest.fixture
-def sample_data():
+@pytest.fixture(name='sample_data')
+def setup_sample_data():
     """
     Fixture that provides a sample 2D numpy array of random values for testing
     the windowing and unwindowing functions.
