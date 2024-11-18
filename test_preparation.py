@@ -1,4 +1,3 @@
-
 """ This is to test the functions created in the preparation module """
 
 import os
@@ -8,6 +7,7 @@ import pytest
 import numpy as np
 import pandas as pd
 import preparation as prep
+
 
 def test_dummy():
     """ Unit test for dummy function """
@@ -32,6 +32,34 @@ def shift_fft(image_df):
 
     return shifted_fft_df
 
+def test_averager():
+    """
+    test_averager verifies that the averager
+    function can correctly calculate the 
+    average value within a 2D list
+    """
+    x=[1,2,3,4,-1,-2,-3,-4]
+    y=[]
+    i=0
+    while i<5:
+        y.append(x)
+        i+=1
+    assert prep.averager(y)==2.5
+
+def test_erase():
+    """
+    test_erase verifies that the values above the 
+    input value are removed from a 2D list. 
+    """
+    x=[67.999,2,100,9,-2-77j,-50,-30,-4, 2+4j,9+3j]
+    y=[]
+    for i in range(5):
+        y.append(x)
+    ave=prep.averager(y)
+    z=prep.erase(2.5,y)
+    for i in z:
+        for j in i:
+            assert j<=ave
 
 class TestFFTShift(unittest.TestCase):
     """
