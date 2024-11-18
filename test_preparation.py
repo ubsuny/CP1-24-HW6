@@ -60,7 +60,7 @@ def test_erase():
     for i in z:
         for j in i:
             assert j<=ave
-            
+
 class TestFFTShift(unittest.TestCase):
     """
     Unit test case for the shift_fft function, which applies a 2D FFT to an image
