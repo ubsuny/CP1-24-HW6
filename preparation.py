@@ -161,7 +161,7 @@ def remove_2d_windowing(windowed_data, window):
     epsilon = 1e-10
     original_data = windowed_data / (window + epsilon)
     return original_data
-=======
+
 def averager(grid):
     """
     averager takes in a two dimensional list of numbers and 
